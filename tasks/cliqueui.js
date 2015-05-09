@@ -13,7 +13,6 @@ module.exports = function(grunt) {
 	var phantom = require("./lib/phantom");
 	var path = require("path");
 	var async = require("async");
-	var uncss = require('uncss');
 	var css = require('css');
 
 	var printObject = function(obj) {
