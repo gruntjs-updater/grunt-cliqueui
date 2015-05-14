@@ -2,6 +2,7 @@
 path = require 'path'
 fs = require 'fs-extra'
 globals = require './globals'
+shell = require 'shelljs'
 cssmin = require 'clean-css'
 uglify = require 'uglify-js'
 zip = require './zip'
@@ -9,7 +10,7 @@ zip = require './zip'
 grunt = null
 options = null
 
-moveFiles =
+release =
 
 	src : ''
 	dest : ''
@@ -41,11 +42,14 @@ moveFiles =
 
 	setFiles : ->
 		@files = []
+		unless grunt.file.exists @src
+			grunt.log.error "Cannot move files - source doesn't exist.\n(#{@src})"
+			return
 		if grunt.file.isDir @src
 			grunt.file.recurse @src, (abspath)=>
 				if abspath.indexOf('.DS_Store') < 0 and abspath.indexOf('.full') < 0
 					@files.push abspath
-		else
+		else if ! grunt.file.isDir(@src)
 			@files = [@src]
 
 	makeCompressedName : (file)->
@@ -96,7 +100,7 @@ moveFiles =
 	unlinkDestinationFolder : ->
 		exists = fs.existsSync @dest
 		if exists
-			fs.rmdir @dest
+			shell.rm '-rf', @dest
 
 	getCurrentVersion : ->
 		pkg = path.resolve path.join( @base, 'package.json' )
@@ -126,13 +130,10 @@ moveFiles =
 			return
 
 		@unlinkDestinationFolder()
-
 		@setFiles()
 		@removeMinFiles()
 		@compressFiles()
-
-
 		@zipFolder()
 
 
-module.exports = moveFiles
+module.exports = release

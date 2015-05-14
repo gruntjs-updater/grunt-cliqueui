@@ -1,10 +1,12 @@
-var cssmin, fs, globals, grunt, moveFiles, options, path, uglify, zip;
+var cssmin, fs, globals, grunt, options, path, release, shell, uglify, zip;
 
 path = require('path');
 
 fs = require('fs-extra');
 
 globals = require('./globals');
+
+shell = require('shelljs');
 
 cssmin = require('clean-css');
 
@@ -16,7 +18,7 @@ grunt = null;
 
 options = null;
 
-moveFiles = {
+release = {
   src: '',
   dest: '',
   cssMinOpts: {
@@ -52,6 +54,10 @@ moveFiles = {
   },
   setFiles: function() {
     this.files = [];
+    if (!grunt.file.exists(this.src)) {
+      grunt.log.error("Cannot move files - source doesn't exist.\n(" + this.src + ")");
+      return;
+    }
     if (grunt.file.isDir(this.src)) {
       return grunt.file.recurse(this.src, (function(_this) {
         return function(abspath) {
@@ -60,7 +66,7 @@ moveFiles = {
           }
         };
       })(this));
-    } else {
+    } else if (!grunt.file.isDir(this.src)) {
       return this.files = [this.src];
     }
   },
@@ -128,7 +134,7 @@ moveFiles = {
     var exists;
     exists = fs.existsSync(this.dest);
     if (exists) {
-      return fs.rmdir(this.dest);
+      return shell.rm('-rf', this.dest);
     }
   },
   getCurrentVersion: function() {
@@ -166,4 +172,4 @@ moveFiles = {
   }
 };
 
-module.exports = moveFiles;
+module.exports = release;

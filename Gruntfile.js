@@ -55,7 +55,7 @@ module.exports = function(grunt) {
 					// cssFiles : [
 					// 	'test/css/main.css'
 					// ],
-					debug : true,
+					// debug : true,
 					commands : ['version', 'move', 'release'],
 					version : {
 						base : ''

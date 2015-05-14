@@ -2,6 +2,7 @@
 path = require 'path'
 fs = require 'fs-extra'
 globals = require './globals'
+# shell = require 'shelljs/global'
 grunt = null
 options = null
 
@@ -73,7 +74,7 @@ moveFiles =
 		@setFileArray files, 'private'
 
 	publicFiles : ->
-		files = ['build', 'unittests', '!results']
+		files = ['build', 'dist', 'unittests', '!results']
 		@setFileArray files, 'public'
 
 	movePublicGruntfile : ->

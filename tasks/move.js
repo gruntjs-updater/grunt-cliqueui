@@ -127,7 +127,7 @@ moveFiles = {
   },
   publicFiles: function() {
     var files;
-    files = ['build', 'unittests', '!results'];
+    files = ['build', 'dist', 'unittests', '!results'];
     return this.setFileArray(files, 'public');
   },
   movePublicGruntfile: function() {
