@@ -113,8 +113,6 @@ moveFiles = {
     if (src.indexOf('.DS_Store') > -1) {
       return;
     }
-    console.log(src);
-    console.log(dest);
     return grunt.file.copy(src, dest);
   },
   baseFiles: function() {

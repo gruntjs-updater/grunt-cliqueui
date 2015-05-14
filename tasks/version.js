@@ -55,8 +55,7 @@ version = {
           hasString = content.indexOf('"version": "' + _this.oldVersion + '",');
           if (hasString > -1) {
             newContent = content.replace(_this.oldVersion, _this.newVersion);
-            grunt.file.write(abspath, newContent);
-            return console.log(abspath);
+            return grunt.file.write(abspath, newContent);
           }
         } else {
           content = grunt.file.read(abspath);

@@ -44,7 +44,6 @@ version =
 				if hasString > -1
 					newContent = content.replace @oldVersion, @newVersion
 					grunt.file.write abspath, newContent
-					console.log abspath
 			else
 				content = grunt.file.read abspath
 				hasString = content.indexOf @oldVersion

@@ -62,8 +62,6 @@ moveFiles =
 	moveFile : (src, dest)->
 		if src.indexOf('.DS_Store') > -1
 			return
-		console.log src
-		console.log dest
 		grunt.file.copy src, dest
 
 	baseFiles : ->
