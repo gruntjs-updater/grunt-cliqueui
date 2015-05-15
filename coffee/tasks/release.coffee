@@ -107,11 +107,13 @@ release =
 		info = grunt.file.readJSON pkg
 		info.version
 
-	createZipName : ->
-		path.resolve path.join( @base, "#{@getCurrentVersion()}.zip" )
-
 	zipFolder : ->
-		zip.zip @dest, @createZipName()
+		shell.rm '-rf', "#{@base}/*.zip"
+		zipSource = path.resolve path.join(@base, @getCurrentVersion())
+		zipDest = path.resolve path.join( @base, "Clique.UI-#{@getCurrentVersion()}.zip" )
+		shell.mv @dest, zipSource
+		zip.zip zipSource, zipDest
+		shell.rm '-rf', zipSource
 
 	init : ->
 		grunt = globals.grunt

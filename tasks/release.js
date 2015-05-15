@@ -143,11 +143,14 @@ release = {
     info = grunt.file.readJSON(pkg);
     return info.version;
   },
-  createZipName: function() {
-    return path.resolve(path.join(this.base, (this.getCurrentVersion()) + ".zip"));
-  },
   zipFolder: function() {
-    return zip.zip(this.dest, this.createZipName());
+    var zipDest, zipSource;
+    shell.rm('-rf', this.base + "/*.zip");
+    zipSource = path.resolve(path.join(this.base, this.getCurrentVersion()));
+    zipDest = path.resolve(path.join(this.base, "Clique.UI-" + (this.getCurrentVersion()) + ".zip"));
+    shell.mv(this.dest, zipSource);
+    zip.zip(zipSource, zipDest);
+    return shell.rm('-rf', zipSource);
   },
   init: function() {
     grunt = globals.grunt;
