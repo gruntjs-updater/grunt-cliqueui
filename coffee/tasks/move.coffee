@@ -66,7 +66,7 @@ moveFiles =
 		grunt.file.copy src, dest
 
 	baseFiles : ->
-		files = ['.csscomb.json', '.editorconfig', 'Gruntfile.js', 'LICENSE', 'package.json', 'README.md']
+		files = ['.csscomb.json', '.editorconfig', 'LICENSE', 'package.json', 'README.md']
 		@setFileArray files, 'base'
 
 	privateFiles : ->

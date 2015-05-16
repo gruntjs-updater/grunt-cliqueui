@@ -146,7 +146,7 @@ release = {
   zipFolder: function() {
     var zipDest, zipSource;
     shell.rm('-rf', this.base + "/*.zip");
-    zipSource = path.resolve(path.join(this.base, this.getCurrentVersion()));
+    zipSource = path.resolve(path.join(this.base, "Clique.UI-" + (this.getCurrentVersion())));
     zipDest = path.resolve(path.join(this.base, "Clique.UI-" + (this.getCurrentVersion()) + ".zip"));
     shell.mv(this.dest, zipSource);
     zip.zip(zipSource, zipDest);

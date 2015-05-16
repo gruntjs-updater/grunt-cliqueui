@@ -109,7 +109,7 @@ release =
 
 	zipFolder : ->
 		shell.rm '-rf', "#{@base}/*.zip"
-		zipSource = path.resolve path.join(@base, @getCurrentVersion())
+		zipSource = path.resolve path.join(@base, "Clique.UI-#{@getCurrentVersion()}")
 		zipDest = path.resolve path.join( @base, "Clique.UI-#{@getCurrentVersion()}.zip" )
 		shell.mv @dest, zipSource
 		zip.zip zipSource, zipDest

@@ -117,7 +117,7 @@ moveFiles = {
   },
   baseFiles: function() {
     var files;
-    files = ['.csscomb.json', '.editorconfig', 'Gruntfile.js', 'LICENSE', 'package.json', 'README.md'];
+    files = ['.csscomb.json', '.editorconfig', 'LICENSE', 'package.json', 'README.md'];
     return this.setFileArray(files, 'base');
   },
   privateFiles: function() {
