@@ -315,7 +315,7 @@ module.exports = function(grunt) {
 				if(grunt.file.isDir(abspath)) {
 					return;
 				}
-				console.log({ clean : abspath });
+				// console.log({ clean : abspath });
 				grunt.file.delete(abspath, {
 					force : true
 				});
