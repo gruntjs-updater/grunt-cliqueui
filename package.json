@@ -1,7 +1,7 @@
 {
   "name": "grunt-cliqueui",
   "description": "A simple build simple for the Clique.UI framework",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "homepage": "https://github.com/nielse63/grunt-cliqueui",
   "author": {
     "name": "Erik Nielsen",
