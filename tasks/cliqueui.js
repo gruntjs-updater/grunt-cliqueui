@@ -9,15 +9,9 @@
 'use strict';
 
 // Load dependent node modules
-var phantom = require("./lib/phantom");
 var path = require('path');
-var async = require('async');
-var css = require('css');
 var chalk = require('chalk');
-var uglify = require('uglify-js');
-var beautify = require('js-beautify');
 var fs = require('fs');
-var cssmin = require('clean-css');
 
 require('shelljs/global');
 
