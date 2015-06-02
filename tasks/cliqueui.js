@@ -57,6 +57,58 @@ module.exports = function(grunt) {
 		return result;
 	};
 
+	function isNumber(obj) {
+		return !isNaN(parseFloat(obj)) && isFinite(obj);
+	}
+
+	function strtojson(str) {
+		var obj = JSON.parse(str),
+			output = {};
+		if(typeof obj != 'object') {
+			return obj;
+		}
+		for(var key in obj) {
+			var value = obj[key];
+			if(typeof value == 'string' && value.length > 1 && (value[0] == '[' || value[0] == '{')) {
+				value = strtojson(value);
+			}
+			output[key] = value;
+		}
+		var allKeysNumbers = true;
+		for(var key in output) {
+			if(!isNumber(key)) {
+				allKeysNumbers = false;
+			}
+		}
+		if(allKeysNumbers) {
+			var newOutput = [];
+			for(var key in output) {
+				var value = output[key];
+				newOutput.push(value);
+			}
+			output = newOutput;
+		}
+		return output;
+	}
+
+	function objtostring(object) {
+		var output = [];
+		for(var key in object) {
+			var value = object[key];
+			var type = typeof value;
+			if(type == 'object') {
+				value = JSON.stringify(value);
+			}
+
+			type = typeof value;
+			if(type == 'string') {
+				value = '"' + value.replace(/"/g, '\\"') + '"';
+			}
+			output.push('"' + key + '":' + value);
+		}
+		return '{' + output.join(',') + '}';
+	}
+
 	// Load grunt tasks
 	var gitPath = path.resolve(path.join(__dirname, '../', 'node_modules', 'grunt-git'));
 	grunt.task.loadNpmTasks('grunt-cliqueui/node_modules/grunt-git');
@@ -107,13 +159,23 @@ module.exports = function(grunt) {
 		grunt.log.ok('Project version updated to v' + newVersion + '.');
 	});
 
-	grunt.registerTask('cliqueui-move-files', 'Moves the necessary files to the appropriate folder', function(src, dest) {
-		grunt.log.ok('Moving package.json and Gruntfile.js into `.public` folder.');
+	grunt.registerTask('cliqueui-move-files', 'Moves the necessary files to the appropriate folder', function(args) {
+		grunt.log.ok('Moving all `dist` files.');
+
+		var args = strtojson(args),
+			src = args.src,
+			dest = args.dest,
+			tasksToRemove = args.tasksToRemove;
 
 		// Remove grunt-cliqueui plugin from public package.json
-		var pkg = grunt.file.readJSON('package.json');
-		delete pkg.devDependencies['grunt-cliqueui'];
-		grunt.file.write('.public/package.json', JSON.stringify(pkg, null, '\t'));
+		var pkg = grunt.file.readJSON(path.resolve(path.join(src, 'package.json')));
+		for(var i = 0; i < tasksToRemove.length; i++) {
+			var task = 'grunt-' + tasksToRemove[i];
+			if(pkg.devDependencies[task]) {
+				delete pkg.devDependencies[task];
+			}
+		}
+		grunt.file.write(path.resolve(path.join(dest, 'package.json')), JSON.stringify(pkg, null, '\t'));
 
 		function trimEmptySpace(content) {
 			var array = content.split("\n");
@@ -149,32 +211,52 @@ module.exports = function(grunt) {
 			return output.join('\n');
 		}
 
-		var startingString = 'cliqueui: {',
-			endingString = '\n\t\t},',
-			content = grunt.file.read('Gruntfile.js');
+		var gruntpath = path.resolve(path.join(src, 'Gruntfile.js')),
+			content = grunt.file.read(gruntpath);
 
-		var startingIndex = content.indexOf(startingString);
-		var endingIndex = startingIndex + content.substring(startingIndex).indexOf(endingString) + endingString.length;
-		var newContent = content.substring(0, startingIndex) + content.substring(endingIndex);
-		newContent = newContent
-			.replace(/\/\/ Release/g, '')
-			.replace(/grunt.loadNpmTasks('grunt-cliqueui');/g, '');
+		function removeGruntTask(key) {
+			var startingString = key + ': {';
+			var startingIndex = content.indexOf(startingString);
+			if(startingIndex < 0) {
+				return content;
+			}
+			var substring = content.substring(0, startingIndex),
+				contentArray = substring.split(/\n/),
+				beforeKey = contentArray[contentArray.length - 1],
+				endingString = '\n' + beforeKey + '},',
+				endingIndex = startingIndex + content.substring(startingIndex).indexOf(endingString) + endingString.length,
+				newContent = substring + content.substring(endingIndex);
+			return newContent.replace('grunt.loadNpmTasks(\'grunt-' + key + '\');', '');
+		}
 
-		startingString = '\tgrunt.registerTask(\n\t\t\'release\',';
-		endingString = '\n\t);';
-		startingIndex = newContent.indexOf(startingString);
-		endingIndex = startingIndex + newContent.substring(startingIndex).indexOf(endingString) + endingString.length;
-		newContent = newContent.substring(0, startingIndex) + newContent.substring(endingIndex);
-		newContent = trimEmptySpace(newContent);
+		function removeCustomTask(task) {
+			var startingString = '\tgrunt.registerTask(\n\t\t\'' + task + '\',',
+				startingIndex = content.indexOf(startingString);
+			if(startingIndex < 0) {
+				return content;
+			}
+			var endingString = '\n\t);',
+				endingIndex = startingIndex + content.substring(startingIndex).indexOf(endingString) + endingString.length;
+			return content.substring(0, startingIndex) + content.substring(endingIndex);
+		}
 
-		grunt.file.write('.public/Gruntfile.js', newContent);
+		for(var i = 0; i < tasksToRemove.length; i++) {
+			content = trimEmptySpace(removeGruntTask(tasksToRemove[i]));
+			content = trimEmptySpace(removeCustomTask(tasksToRemove[i]));
+		}
+
+		var outpath = path.resolve(path.join(dest, 'Gruntfile.js'));
+		grunt.file.write(outpath, content);
 
 		// Copy fonts
-		grunt.file.recurse('docs/fonts', function(abspath) {
-			if(abspath.indexOf('icomoon') > -1) {
-				grunt.file.copy(abspath, abspath.replace('docs', 'dist'));
-			}
-		});
+		var fonts = path.resolve(path.join(src, 'docs', 'fonts'));
+		if(grunt.file.exists(fonts)) {
+			grunt.file.recurse(fonts, function(abspath) {
+				if(abspath.indexOf('icomoon') > -1) {
+					grunt.file.copy(abspath, path.resolve(path.join(src, 'dist', 'fonts')));
+				}
+			});
+		}
 	});
 
 	grunt.registerTask('cliqueui-zip', 'Create a zip folder', function() {
@@ -325,7 +407,6 @@ module.exports = function(grunt) {
 				}
 				var srcpath = path.resolve(abspath);
 				var destpath = makeDestPath(srcpath);
-				// console.log({src : srcpath, dest : destpath});
 				grunt.file.copy(srcpath, destpath);
 			});
 		}
@@ -336,7 +417,6 @@ module.exports = function(grunt) {
 		for(var i = 0; i < files.length; i++) {
 			var srcpath = path.resolve(files[i]);
 			var destpath = makeDestPath(srcpath);
-			// console.log({src : srcpath, dest : destpath});
 			grunt.file.copy(srcpath, destpath);
 		}
 
@@ -361,7 +441,8 @@ module.exports = function(grunt) {
 			move : {
 				base : '',
 				src : '',
-				dest : ''
+				dest : '',
+				tasksToRemove : ['cliqueui', 'pagespeed', 'release']
 			},
 			release : {
 				base : '',
@@ -369,31 +450,37 @@ module.exports = function(grunt) {
 				dest : ''
 			}
 		});
-		var takslist = ['gitadd', 'gitcommit'];
+		var tasklist = ['gitadd', 'gitcommit'];
+		var displayTasks = tasklist;
 
 		function shouldRunCommand(cmd) {
 			return options.commands.indexOf(cmd) > -1;
 		}
 
 		// Increment the version string
-		takslist = [];
+		tasklist = [];
 		if(shouldRunCommand('version') && grunt.task.exists('cliqueui-version')) {
-			takslist.push('cliqueui-version:' + options.version.base);
+			tasklist.push('cliqueui-version:' + options.version.base);
+			displayTasks.push('cliqueui-version');
 		}
 
 		// Move files
 		if(shouldRunCommand('move') && grunt.task.exists('cliqueui-move-files')) {
-			takslist.push('cliqueui-move-files:' + options.move.src + ':' + options.move.dest);
+			var args = objtostring(options.move).replace(/\:/g, '\\:');
+			tasklist.push('cliqueui-move-files:' + args);
+			displayTasks.push('cliqueui-move-files');
 		}
 
 		// Clean, compile and zip
 		if(shouldRunCommand('zip') && grunt.task.exists('cliqueui-zip')) {
-			takslist.push('cliqueui-zip');
+			tasklist.push('cliqueui-zip');
+			displayTasks.push('cliqueui-zip');
 		}
 
 		// Update docs repo
 		if(shouldRunCommand('docs') && grunt.task.exists('cliqueui-docs')) {
-			takslist.push('cliqueui-docs');
+			tasklist.push('cliqueui-docs');
+			displayTasks.push('cliqueui-docs');
 		}
 
 		grunt.config.set('gitadd', {
@@ -415,8 +502,8 @@ module.exports = function(grunt) {
 			},
 		});
 
-		takslist = flatten(takslist);
-		grunt.log.ok('Executing tasks: ' + takslist.join(' '));
-		grunt.task.run(takslist);
+		tasklist = flatten(tasklist);
+		grunt.log.ok('Executing tasks: ' + displayTasks.join(', '));
+		grunt.task.run(tasklist);
 	});
 };

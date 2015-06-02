@@ -51,19 +51,16 @@ module.exports = function(grunt) {
 		cliqueui: {
 			default_options: {
 				options: {
-					// base : 'http://cliqueui.dev/',
-					// cssFiles : [
-					// 	'test/css/main.css'
-					// ],
-					// debug : true,
-					commands : ['version', 'move', 'release'],
+					// commands : ['version', 'move', 'release'],
+					commands : ['move'],
 					version : {
 						base : ''
 					},
 					move : {
-						base : '../',
-						src : '',
-						dest : '../clique.github/Clique.UI'
+						base : 'tmp',
+						src : 'tmp',
+						dest : 'tmp/.public',
+						tasksToRemove : ['cliqueui', 'pagespeed', 'release']
 					},
 					release : {
 						base : '../clique.github/Clique.UI',
